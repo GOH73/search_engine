@@ -52,18 +52,29 @@ def sleep():
 def process_novel_page(page: str):
     soup = BeautifulSoup(page, 'html.parser')
     for num in range(15):
-        tag = soup.select(
+        url_tag = soup.select(
             'body > div.wrapper.padding-top.border-top > div > div:nth-child(2) > div > div.qm-mod-tb > '
             f'div.con-box.books-pic-con.js-list-data > ul > li:nth-child({num + 1}) > div.txt > span.s-tit > a')[
             0]
-        href = tag['href']
-        name = tag.text
+
+        cover_tag = soup.select(
+            'body > div.wrapper.padding-top.border-top > div > div:nth-child(2) > div > '
+            f'div.qm-mod-tb > div.con-box.books-pic-con.js-list-data > ul > li:nth-child({num + 1}) > '
+            'div.pic > a > img')[0]
+
+        href = url_tag['href']
+        name = url_tag.text
+        cover_src = cover_tag['src']
+        cover = requests.get(cover_src)
         page_path = domain_name + href
 
-        response = requests.request(method='GET', url=page_path)
+        response = requests.get(page_path)
         response.headers['User-Agent'] = random.choice(USER_AGENT_LIST)
         with open(f'./novel_pages/{name}.html', 'w', encoding='utf-8') as file:
             file.write(response.text)
+        with open(f'./covers/{name}.jpg', 'wb') as file:
+            file.write(cover.content)
+            print(f'{name}.jpg下载完成')
         sleep()
 
 
@@ -83,23 +94,6 @@ def process_rank_page():
 
         with open(f"./web_pages/{tail}.html", "w", encoding="utf-8") as file:
             file.write(response.text)
-
-        soup = BeautifulSoup(response.text, 'html.parser')
-        for num in range(15):
-            tag = soup.select(
-                'body > div.wrapper.padding-top.border-top > div > div:nth-child(2) > div > '
-                f'div.qm-mod-tb > div.con-box.books-pic-con.js-list-data > ul > li:nth-child({num + 1}) > '
-                'div.pic > a > img')[0]
-            name = soup.select(
-                'body > div.wrapper.padding-top.border-top > div > div:nth-child(2) > div > div.qm-mod-tb > '
-                f'div.con-box.books-pic-con.js-list-data > ul > li:nth-child({num + 1}) > div.txt > span.s-tit > a')[
-                0].text
-            src = tag['src']
-            img = requests.get(src)
-            with open(f'./covers/{name}.jpg', 'wb') as file:
-                file.write(img.content)
-            print(f'{name}.jpg，√')
-            sleep()
         print(f'第{page_num + 1}页，done')
         sleep()
 
