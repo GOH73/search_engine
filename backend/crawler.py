@@ -48,6 +48,16 @@ def sleep():
     time.sleep(random.randrange(0, 3))
 
 
+# 存储小说简介
+def process_summary(page: str, name: str):
+    soup = BeautifulSoup(page, 'html.parser')
+    sum_tag = soup.select('#__layout > div > div.wrapper > div > div > div > div.book-detail-body > div > '
+                          'div.tab-content.clearfix > div.l-col > div > div:nth-child(1) > div.qm-with-title-tb > p')[0]
+    summary = sum_tag.text
+    with open(f'./txt/{name}.txt', 'w', encoding='utf-8') as file:
+        file.write(summary)
+
+
 # 处理小说页面
 def process_novel_page(page: str):
     soup = BeautifulSoup(page, 'html.parser')
@@ -70,6 +80,7 @@ def process_novel_page(page: str):
 
         response = requests.get(page_path)
         response.headers['User-Agent'] = random.choice(USER_AGENT_LIST)
+        process_summary(response.text, name)
         with open(f'./novel_pages/{name}.html', 'w', encoding='utf-8') as file:
             file.write(response.text)
         with open(f'./covers/{name}.jpg', 'wb') as file:
